@@ -1,33 +1,49 @@
-# Weather API App 🌦️
+import requests
 
-A simple Python project that fetches real-time weather data for any city using the Open-Meteo API.
+def get_coordinates(city):
+    url = "https://geocoding-api.open-meteo.com/v1/search"
+    params = {"name": city, "count": 1}
+    response = requests.get(url, params=params)
 
-## 🚀 Features
-- Converts city name to latitude & longitude using Geocoding API  
-- Fetches current weather using Open-Meteo Forecast API  
-- Shows:
-  - Temperature (°C)  
-  - Wind Speed (km/h)
+    if response.status_code == 200:
+        data = response.json()
+        if "results" in data and len(data["results"]) > 0:
+            lat = data["results"][0]["latitude"]
+            lon = data["results"][0]["longitude"]
+            return lat, lon
+        else:
+            print("City not found.")
+            return None
+    else:
+        print("Error fetching coordinates.")
+        return None
 
-## 🧰 Technologies Used
-- Python  
-- requests library  
-- Open-Meteo Geocoding API  
-- Open-Meteo Forecast API
 
-## ▶️ How to Run
+def get_weather(lat, lon, city):
+    url = "https://api.open-meteo.com/v1/forecast"
+    params = {
+        "latitude": lat,
+        "longitude": lon,
+        "current_weather": True
+    }
 
-1. Install dependencies:
-   pip install requests
+    response = requests.get(url, params=params)
 
-2. Run the script:
-   python main.py
+    if response.status_code == 200:
+        data = response.json()
+        temp = data["current_weather"]["temperature"]
+        wind = data["current_weather"]["windspeed"]
 
-3. Enter any city name when asked.
+        print(f"\nWeather for: {city}")
+        print(f"Temperature: {temp}°C")
+        print(f"Wind Speed: {wind} km/h")
+    else:
+        print("Error fetching weather data.")
 
-## 🎯 Purpose
-This project demonstrates:
-- Working with public APIs  
-- Handling JSON responses  
-- Breaking code into reusable functions  
-- Basic error handling  
+
+city = input("Enter your city name: ")
+coords = get_coordinates(city)
+
+if coords:
+    lat, lon = coords
+    get_weather(lat, lon, city)
